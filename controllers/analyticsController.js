@@ -33,34 +33,8 @@ exports.getCategoryAnalytics = async (req, res) => {
     const userId = req.user._id;
 
     const data = await Transaction.aggregate([
-      {
-        $match: {
-          user: userId,
-          type: "expense", // only expenses
-        },
-      },
-      {
-        $group: {
-          _id: "$category",
-          total: { $sum: "$amount" },
-        },
-      },
-      {
-        $lookup: {
-          from: "categories", // MongoDB collection name
-          localField: "_id",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      { $unwind: "$category" },
-      {
-        $project: {
-          _id: 0,
-          name: "$category.name",
-          total: 1,
-        },
-      },
+      { $match: { user: userId, type: "expense" } },
+      { $group: { _id: "$category", total: { $sum: "$amount" } } },
     ]);
 
     res.json(data);
