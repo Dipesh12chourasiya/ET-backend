@@ -1,0 +1,98 @@
+const Transaction = require("../model/Transaction");
+
+exports.getMonthlySummary = async (req, res) => {
+  const userId = req.user._id;
+
+  const summary = await Transaction.aggregate([
+    { $match: { user: userId } },
+    {
+      $group: {
+        _id: "$type",
+        total: { $sum: "$amount" },
+      },
+    },
+  ]);
+
+  let income = 0;
+  let expense = 0;
+
+  summary.forEach((item) => {
+    if (item._id === "income") income = item.total;
+    if (item._id === "expense") expense = item.total;
+  });
+
+  res.json({
+    income,
+    expense,
+    savings: income - expense,
+  });
+};
+
+exports.getCategoryAnalytics = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const data = await Transaction.aggregate([
+      {
+        $match: {
+          user: userId,
+          type: "expense", // only expenses
+        },
+      },
+      {
+        $group: {
+          _id: "$category",
+          total: { $sum: "$amount" },
+        },
+      },
+      {
+        $lookup: {
+          from: "categories", // MongoDB collection name
+          localField: "_id",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: "$category" },
+      {
+        $project: {
+          _id: 0,
+          name: "$category.name",
+          total: 1,
+        },
+      },
+    ]);
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: "Category analytics failed" });
+  }
+};
+
+exports.getIncomeExpenseTrend = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const data = await Transaction.aggregate([
+      {
+        $match: { user: userId },
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            type: "$type",
+          },
+          total: { $sum: "$amount" },
+        },
+      },
+      {
+        $sort: { "_id.month": 1 },
+      },
+    ]);
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: "Trend analytics failed" });
+  }
+};

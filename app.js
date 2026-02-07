@@ -7,6 +7,8 @@ const userRouter = require("./routes/userRouter");
 const errorHandler = require("./middlewares/errorHandlerMiddleware");
 const categoryRouter = require("./routes/categoryRouter");
 const transactionRouter = require("./routes/transactionRouter");
+const analyticsRoutes = require("./routes/analyticsRoutes");
+
 const app = express();
 
 //!Connect to mongodb
@@ -25,9 +27,11 @@ app.use(cors(corsOptions));
 app.use(express.json()); //?Pass incoming json data
 
 //!Routes
-app.use("/", userRouter);
-app.use("/", categoryRouter);
-app.use("/", transactionRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/categories", categoryRouter);
+app.use("/api/v1/transactions", transactionRouter);
+app.use("/api/v1/analytics", analyticsRoutes);
+
 //! Error
 app.use(errorHandler);
 
