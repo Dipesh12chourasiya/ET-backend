@@ -29,6 +29,13 @@ app.use(cors(corsOptions));
 app.use(express.json()); //?Pass incoming json data
 
 //!Routes
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Backend server is running",
+  });
+});
+
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/transactions", transactionRouter);
