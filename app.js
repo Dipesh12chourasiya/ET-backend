@@ -1,7 +1,7 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const connectDB = require("./config/db");
 
 const userRouter = require("./routes/userRouter");
 const errorHandler = require("./middlewares/errorHandlerMiddleware");
@@ -9,7 +9,7 @@ const categoryRouter = require("./routes/categoryRouter");
 const transactionRouter = require("./routes/transactionRouter");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const aiRoutes = require("./routes/aiRoutes");
-const  connectDB = require("./config/db")
+
 
 const app = express();
 
@@ -26,10 +26,10 @@ app.use(cors(corsOptions));
 app.use(express.json()); //?Pass incoming json data
 
 //!Routes
-
 app.get("/", (req, res) => {
   res.status(200).json({
-    message: "Backend server is running",
+    success: true,
+    message: "Backend server is running 🚀",
   });
 });
 
