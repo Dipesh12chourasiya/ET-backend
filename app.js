@@ -9,15 +9,12 @@ const categoryRouter = require("./routes/categoryRouter");
 const transactionRouter = require("./routes/transactionRouter");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const aiRoutes = require("./routes/aiRoutes");
-
+const  connectDB = require("./config/db")
 
 const app = express();
 
 //!Connect to mongodb
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("DB Connected"))
-  .catch((e) => console.log(e));
+connectDB();
 
 //! Cors config
 const corsOptions = {
