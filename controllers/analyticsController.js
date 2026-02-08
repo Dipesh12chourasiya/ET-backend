@@ -43,21 +43,32 @@ exports.getCategoryAnalytics = async (req, res) => {
   }
 };
 
-exports.getIncomeExpenseTrend = async (req, res) => {
+exports.getMonthlyExpenseTrend = async (req, res) => {
   try {
     const userId = req.user._id;
 
     const data = await Transaction.aggregate([
       {
-        $match: { user: userId },
+        $match: {
+          user: userId,
+          type: "expense",
+          date: { $exists: true },
+        },
+      },
+      {
+        $addFields: {
+          month: {
+            $month: {
+              date: "$date",
+              timezone: "Asia/Kolkata",
+            },
+          },
+        },
       },
       {
         $group: {
-          _id: {
-            month: { $month: "$createdAt" },
-            type: "$type",
-          },
-          total: { $sum: "$amount" },
+          _id: { month: "$month" },
+          totalExpense: { $sum: "$amount" },
         },
       },
       {
@@ -67,6 +78,7 @@ exports.getIncomeExpenseTrend = async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: "Trend analytics failed" });
+    res.status(500).json({ message: "Monthly expense trend failed" });
   }
 };
+

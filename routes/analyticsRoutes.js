@@ -5,7 +5,7 @@ const isAuthenticated  = require("../middlewares/isAuth");
 const {
   getMonthlySummary,
   getCategoryAnalytics,
-  getIncomeExpenseTrend,
+  getMonthlyExpenseTrend,
 } = require("../controllers/analyticsController");
 
 // get monthly summary
@@ -15,6 +15,6 @@ router.get("/monthly-summary", isAuthenticated, getMonthlySummary);
 router.get("/category-wise", isAuthenticated, getCategoryAnalytics);
 
 // income expense trend
-router.get("/income-expense-trend", isAuthenticated, getIncomeExpenseTrend);
+router.get("/monthly-expense-trend", isAuthenticated, getMonthlyExpenseTrend);
 
 module.exports = router;
