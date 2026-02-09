@@ -43,6 +43,7 @@ const getMonthlySummaryData = async (userId, offset = 0) => {
   return { income, expense, savings: income - expense };
 };
 
+
 const getCategoryData = async (userId) => {
   const { start, end } = getMonthRange(0);
 
@@ -51,7 +52,7 @@ const getCategoryData = async (userId) => {
       $match: {
         user: userId,
         type: "expense",
-        createdAt: { $gte: start, $lt: end },
+        date: { $gte: start, $lt: end }, // using transaction date
       },
     },
     {
@@ -62,6 +63,8 @@ const getCategoryData = async (userId) => {
     },
   ]);
 };
+
+
 
 /* ---------- PROMPT ---------- */
 const buildAIPrompt = (current, previous, categories) => {
