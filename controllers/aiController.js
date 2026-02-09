@@ -2,8 +2,8 @@ const Transaction = require("../model/Transaction");
 const { generateAISummary } = require("../services/aiService");
 
 /* ---------- DATE HELPERS ---------- */
-const getMonthRange = (offset = 0) => {
-  const start = new Date();
+const getMonthRangeFromDate = (baseDate, offset = 0) => {
+  const start = new Date(baseDate);
   start.setMonth(start.getMonth() - offset, 1);
   start.setHours(0, 0, 0, 0);
 
@@ -14,14 +14,14 @@ const getMonthRange = (offset = 0) => {
 };
 
 /* ---------- DATA QUERIES ---------- */
-const getMonthlySummaryData = async (userId, offset = 0) => {
-  const { start, end } = getMonthRange(offset);
+const getMonthlySummaryData = async (userId, baseDate, offset = 0) => {
+  const { start, end } = getMonthRangeFromDate(baseDate, offset);
 
   const data = await Transaction.aggregate([
     {
       $match: {
         user: userId,
-        createdAt: { $gte: start, $lt: end },
+        date: { $gte: start, $lt: end }, // ✅ user-entered date
       },
     },
     {
@@ -40,19 +40,22 @@ const getMonthlySummaryData = async (userId, offset = 0) => {
     if (d._id === "expense") expense = d.total;
   });
 
-  return { income, expense, savings: income - expense };
+  return {
+    income,
+    expense,
+    savings: income - expense,
+  };
 };
 
-
-const getCategoryData = async (userId) => {
-  const { start, end } = getMonthRange(0);
+const getCategoryData = async (userId, baseDate) => {
+  const { start, end } = getMonthRangeFromDate(baseDate, 0);
 
   return Transaction.aggregate([
     {
       $match: {
         user: userId,
         type: "expense",
-        date: { $exists: true, $gte: start, $lt: end }, // using transaction date
+        date: { $gte: start, $lt: end }, // ✅ correct month, correct date
       },
     },
     {
@@ -61,16 +64,16 @@ const getCategoryData = async (userId) => {
         total: { $sum: "$amount" },
       },
     },
+    { $sort: { total: -1 } },
   ]);
 };
 
-
-
 /* ---------- PROMPT ---------- */
 const buildAIPrompt = (current, previous, categories) => {
-  const expenseChange = previous.expense
-    ? (((current.expense - previous.expense) / previous.expense) * 100).toFixed(1)
-    : 0;
+  const expenseChange =
+    previous.expense > 0
+      ? (((current.expense - previous.expense) / previous.expense) * 100).toFixed(1)
+      : "N/A";
 
   return `
 You are a financial advisor AI.
@@ -81,10 +84,10 @@ Expense: ₹${current.expense}
 Savings: ₹${current.savings}
 
 Last Month Expense: ₹${previous.expense}
-Expense Change: ${expenseChange}%
+Expense Change: ${expenseChange}
 
 Category-wise Expenses:
-${categories.map(c => `${c._id}: ₹${c.total}`).join("\n")}
+${categories.map((c) => `${c._id}: ₹${c.total}`).join("\n")}
 
 Generate:
 1. Spending behavior
@@ -100,19 +103,32 @@ exports.generateMonthlyAIReport = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const current = await getMonthlySummaryData(userId, 0);
-    const previous = await getMonthlySummaryData(userId, 1);
-    const categories = await getCategoryData(userId);
+    // 🔥 Anchor report to latest transaction date (NOT system date)
+    const latestTransaction = await Transaction.findOne({ user: userId })
+      .sort({ date: -1 })
+      .select("date");
+
+    if (!latestTransaction) {
+      return res.json({
+        aiReport: "No transactions found to generate report.",
+      });
+    }
+
+    const baseDate = latestTransaction.date;
+
+    const current = await getMonthlySummaryData(userId, baseDate, 0);
+    const previous = await getMonthlySummaryData(userId, baseDate, 1);
+    const categories = await getCategoryData(userId, baseDate);
 
     const prompt = buildAIPrompt(current, previous, categories);
     const aiReport = await generateAISummary(prompt);
 
     res.json({ aiReport });
   } catch (err) {
-    console.error("AI REPORT ERROR 👉", err.response?.data || err.message);
+    console.error("AI REPORT ERROR 👉", err.message);
     res.status(500).json({
       message: "AI report generation failed",
-      error: err.response?.data || err.message,
+      error: err.message,
     });
   }
 };
