@@ -52,7 +52,7 @@ const getCategoryData = async (userId) => {
       $match: {
         user: userId,
         type: "expense",
-        date: { $gte: start, $lt: end }, // using transaction date
+        date: { $exists: true, $gte: start, $lt: end }, // using transaction date
       },
     },
     {
