@@ -83,7 +83,6 @@ Income: ₹${current.income}
 Expense: ₹${current.expense}
 Savings: ₹${current.savings}
 
-Last Month Expense: ₹${previous.expense}
 Expense Change: ${expenseChange}
 
 Category-wise Expenses:
@@ -91,7 +90,7 @@ ${categories.map((c) => `${c._id}: ₹${c.total}`).join("\n")}
 
 Generate:
 1. Spending behavior
-2. Comparison with last month
+2. Tips for savings
 3. Warnings or suggestions
 
 Keep response concise and user-friendly.

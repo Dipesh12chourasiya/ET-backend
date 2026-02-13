@@ -6,6 +6,7 @@ const {
   getMonthlySummary,
   getCategoryAnalytics,
   getMonthlyExpenseTrend,
+  downloadFilteredReport,
 } = require("../controllers/analyticsController");
 
 // get monthly summary
@@ -16,5 +17,8 @@ router.get("/category-wise", isAuthenticated, getCategoryAnalytics);
 
 // income expense trend
 router.get("/monthly-expense-trend", isAuthenticated, getMonthlyExpenseTrend);
+
+// download report
+router.get("/download-filtered-report", isAuthenticated, downloadFilteredReport);
 
 module.exports = router;
