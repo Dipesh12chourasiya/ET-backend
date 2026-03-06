@@ -101,6 +101,7 @@ Keep response concise and user-friendly.
 exports.generateMonthlyAIReport = async (req, res) => {
   try {
     const userId = req.user._id;
+    //  console.log("AI REPORT API HIT", req.user);
 
     // 🔥 Anchor report to latest transaction date (NOT system date)
     const latestTransaction = await Transaction.findOne({ user: userId })
@@ -124,10 +125,11 @@ exports.generateMonthlyAIReport = async (req, res) => {
 
     res.json({ aiReport });
   } catch (err) {
-    console.error("AI REPORT ERROR 👉", err.message);
+    console.log("AI REPORT ERROR 👉", err.message);
     res.status(500).json({
       message: "AI report generation failed",
       error: err.message,
     });
   }
 };
+
